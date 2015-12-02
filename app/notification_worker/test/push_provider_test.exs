@@ -1,7 +1,9 @@
 defmodule PushProviderTest do
   use ExUnit.Case, async: true
+
   alias NotificationWorker.Provider.PushProviderSup
   alias NotificationWorker.Provider.PushDispatcher
+
   setup do
     options = %{
       gcm_options: %{
@@ -86,6 +88,7 @@ defmodule PushProviderTest do
     # PushDispatcher.dispatch notification_job
     # PushDispatcher.dispatch notification_job
     # PushDispatcher.dispatch notification_job
+    :timer.sleep 1000
     assert 1 == 1
   end
 end
