@@ -11,9 +11,9 @@ config :logger, level: :warn
 
 # Configure your database
 config :notification_api, NotificationApi.Repo,
- adapter: Ecto.Adapters.MySQL,
- username: "makeusmobile",
- password: "foretouch919293",
- database: "makeus_notification",
- hostname: "127.0.0.1",
- pool_size: 10
+adapter: Ecto.Adapters.MySQL,
+username: "makeusmobile",
+password: "foretouch919293",
+database: "mks_common",
+hostname: "127.0.0.1",
+pool_size: 10

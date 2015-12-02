@@ -1,18 +1,18 @@
-defmodule NotificationApi.UserTest do
+defmodule NotificationApi.PushTest do
   use NotificationApi.ModelCase
 
-  alias NotificationApi.User
+  alias NotificationApi.Push
 
-  @valid_attrs %{user_seq: 42}
+  @valid_attrs %{push_id: "some content"}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do
-    changeset = User.changeset(%User{}, @valid_attrs)
+    changeset = Push.changeset(%Push{}, @valid_attrs)
     assert changeset.valid?
   end
 
   test "changeset with invalid attributes" do
-    changeset = User.changeset(%User{}, @invalid_attrs)
+    changeset = Push.changeset(%Push{}, @invalid_attrs)
     refute changeset.valid?
   end
 end

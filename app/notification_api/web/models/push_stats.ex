@@ -1,13 +1,13 @@
-defmodule NotificationApi.User do
+defmodule NotificationApi.PushStats do
   use NotificationApi.Web, :model
 
-  schema "user" do
-    field :user_seq, :integer
+  schema "push_stats" do
+    field :push_id, :string
 
     timestamps
   end
 
-  @required_fields ~w(user_seq)
+  @required_fields ~w(push_id)
   @optional_fields ~w()
 
   @doc """

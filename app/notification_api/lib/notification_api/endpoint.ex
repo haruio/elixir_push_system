@@ -33,7 +33,7 @@ defmodule NotificationApi.Endpoint do
   plug Plug.Session,
     store: :cookie,
     key: "_notification_api_key",
-    signing_salt: "/EF/6GTg"
+    signing_salt: "Hmk/THtv"
 
   plug NotificationApi.Router
 end

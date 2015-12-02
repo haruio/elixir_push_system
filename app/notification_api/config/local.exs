@@ -2,7 +2,7 @@ use Mix.Config
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
-
+#
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
@@ -34,9 +34,9 @@ config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
 config :notification_api, NotificationApi.Repo,
-adapter: Ecto.Adapters.MySQL,
-username: "makeusmobile",
-password: "foretouch919293",
-database: "mks_common",
-hostname: "127.0.0.1",
-pool_size: 10
+  adapter: Ecto.Adapters.MySQL,
+  username: "makeusmobile",
+  password: "foretouch919293",
+  database: "mks_common",
+  hostname: "localhost",
+  pool_size: 10

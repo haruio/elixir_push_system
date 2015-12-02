@@ -1,7 +1,7 @@
-defmodule NotificationApi.User do
+defmodule NotificationApi.UserService do
   use NotificationApi.Web, :model
 
-  schema "user" do
+  schema "user_service" do
     field :user_seq, :integer
 
     timestamps

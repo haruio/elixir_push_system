@@ -19,7 +19,7 @@ defmodule NotificationApi.Mixfile do
   def application do
     [mod: {NotificationApi, []},
      applications: [:phoenix, :phoenix_html, :cowboy, :logger,
-                    :phoenix_ecto, :mariaex]]
+                    :phoenix_ecto, :mariaex, :tzdata]]
   end
 
   # Specifies which paths to compile per environment.
@@ -35,7 +35,12 @@ defmodule NotificationApi.Mixfile do
      {:mariaex, ">= 0.0.0"},
      {:phoenix_html, "~> 2.1"},
      {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:cowboy, "~> 1.0"}]
+     {:cowboy, "~> 1.0"},
+     {:timex, "~> 1.0.0-rc3"},
+     {:exactor, "~> 2.2"},
+     {:amqp, "~> 0.1.4"},
+     {:poolboy, "~> 1.5"}
+    ]
   end
 
   # Aliases are shortcut or tasks specific to the current project.

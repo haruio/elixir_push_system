@@ -1,8 +1,8 @@
-defmodule NotificationApi.UserControllerTest do
+defmodule NotificationApi.ServiceControllerTest do
   use NotificationApi.ConnCase
 
-  alias NotificationApi.User
-  @valid_attrs %{user_seq: 42}
+  alias NotificationApi.Service
+  @valid_attrs %{service_id: "some content"}
   @invalid_attrs %{}
 
   setup do
@@ -11,51 +11,51 @@ defmodule NotificationApi.UserControllerTest do
   end
 
   test "lists all entries on index", %{conn: conn} do
-    conn = get conn, user_path(conn, :index)
+    conn = get conn, service_path(conn, :index)
     assert json_response(conn, 200)["data"] == []
   end
 
   test "shows chosen resource", %{conn: conn} do
-    user = Repo.insert! %User{}
-    conn = get conn, user_path(conn, :show, user)
-    assert json_response(conn, 200)["data"] == %{"id" => user.id,
-      "user_seq" => user.user_seq}
+    service = Repo.insert! %Service{}
+    conn = get conn, service_path(conn, :show, service)
+    assert json_response(conn, 200)["data"] == %{"id" => service.id,
+      "service_id" => service.service_id}
   end
 
   test "does not show resource and instead throw error when id is nonexistent", %{conn: conn} do
     assert_raise Ecto.NoResultsError, fn ->
-      get conn, user_path(conn, :show, -1)
+      get conn, service_path(conn, :show, -1)
     end
   end
 
   test "creates and renders resource when data is valid", %{conn: conn} do
-    conn = post conn, user_path(conn, :create), user: @valid_attrs
+    conn = post conn, service_path(conn, :create), service: @valid_attrs
     assert json_response(conn, 201)["data"]["id"]
-    assert Repo.get_by(User, @valid_attrs)
+    assert Repo.get_by(Service, @valid_attrs)
   end
 
   test "does not create resource and renders errors when data is invalid", %{conn: conn} do
-    conn = post conn, user_path(conn, :create), user: @invalid_attrs
+    conn = post conn, service_path(conn, :create), service: @invalid_attrs
     assert json_response(conn, 422)["errors"] != %{}
   end
 
   test "updates and renders chosen resource when data is valid", %{conn: conn} do
-    user = Repo.insert! %User{}
-    conn = put conn, user_path(conn, :update, user), user: @valid_attrs
+    service = Repo.insert! %Service{}
+    conn = put conn, service_path(conn, :update, service), service: @valid_attrs
     assert json_response(conn, 200)["data"]["id"]
-    assert Repo.get_by(User, @valid_attrs)
+    assert Repo.get_by(Service, @valid_attrs)
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
-    user = Repo.insert! %User{}
-    conn = put conn, user_path(conn, :update, user), user: @invalid_attrs
+    service = Repo.insert! %Service{}
+    conn = put conn, service_path(conn, :update, service), service: @invalid_attrs
     assert json_response(conn, 422)["errors"] != %{}
   end
 
   test "deletes chosen resource", %{conn: conn} do
-    user = Repo.insert! %User{}
-    conn = delete conn, user_path(conn, :delete, user)
+    service = Repo.insert! %Service{}
+    conn = delete conn, service_path(conn, :delete, service)
     assert response(conn, 204)
-    refute Repo.get(User, user.id)
+    refute Repo.get(Service, service.id)
   end
 end

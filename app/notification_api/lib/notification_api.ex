@@ -13,6 +13,8 @@ defmodule NotificationApi do
       worker(NotificationApi.Repo, []),
       # Here you could define other workers and supervisors as children
       # worker(NotificationApi.Worker, [arg1, arg2, arg3]),
+      worker(Util.ProducerPool, [[host: "127.0.0.1", port: 5672, username: "admin", password: "admin"
+]])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

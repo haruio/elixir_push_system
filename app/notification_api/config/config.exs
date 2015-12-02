@@ -5,20 +5,11 @@
 # is restricted to this project.
 use Mix.Config
 
- config :notification_api, NotificationApi.Repo,
-  adapter: Ecto.Adapters.MySQL,
-  username: "makeusmobile",
-  password: "foretouch919293",
-  database: "makeus_notification",
-  hostname: "127.0.0.1",
-  pool_size: 10
-
-
 # Configures the endpoint
 config :notification_api, NotificationApi.Endpoint,
   url: [host: "localhost"],
   root: Path.dirname(__DIR__),
-  secret_key_base: "zpjNcxxlzzwab/CkuTrPAy4JUAt0fqeG5nmA61WpVLAddkOCKxh+AojYslHPR7W+",
+  secret_key_base: "SYca3VQ/4lZaT0vcS+0o+mhWsc6i6Wk2+55ecRKeoOL3Xs5fbQKkrhwUx/maunZO",
   render_errors: [accepts: ~w(html json)],
   pubsub: [name: NotificationApi.PubSub,
            adapter: Phoenix.PubSub.PG2]

@@ -1,13 +1,13 @@
-defmodule NotificationApi.User do
+defmodule NotificationApi.Service do
   use NotificationApi.Web, :model
 
-  schema "user" do
-    field :user_seq, :integer
+  schema "service" do
+    field :service_id, :string
 
     timestamps
   end
 
-  @required_fields ~w(user_seq)
+  @required_fields ~w(service_id)
   @optional_fields ~w()
 
   @doc """
