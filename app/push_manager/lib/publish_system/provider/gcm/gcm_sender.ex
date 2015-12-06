@@ -2,15 +2,22 @@ defmodule PushManager.PublishSystem.Provider.GcmSender do
   use ExActor.GenServer
 
   alias PushManager.PublishSystem.Feedback.FeedbackDispatcher
-
+  alias PushManager.Model.PushStats.Query, as: PushStatsQuery
+  alias PushManager.Repo
+  
   defstart start_link(_), do: initial_state(0)
 
-  defcall publish({options, payload, deviceTokens}), state: state do
+  defcall publish({notification, deviceTokens}), state: state do
+    options = notification.options
+    payload = notification.payload
+
     {:ok, gcm_res} = GCM.push(options.gcm.api_key, deviceTokens, build_payload(payload))
     {:ok, parsed_body} = Poison.Parser.parse(gcm_res.body)
 
     get_changed_tokens(parsed_body, deviceTokens)
     |> FeedbackDispatcher.dispatch(options.feedback)
+
+    PushStatsQuery.insert_published notification.push_id, parsed_body["success"]
 
     reply :ok
   end
