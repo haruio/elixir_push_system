@@ -2,6 +2,7 @@ defmodule PushManager do
   use Application
 
   alias PushManager.PublishSystem
+  alias PushManager.Repo
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -11,7 +12,8 @@ defmodule PushManager do
     children = [
       # Define workers and child supervisors to be supervised
       # worker(PushManager.Worker, [arg1, arg2, arg3]),
-      worker(PublishSystem, [[]])
+      worker(PublishSystem, [[]]),
+      worker(Repo, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
