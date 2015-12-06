@@ -2,6 +2,7 @@ defmodule PushManager.PublishSystem.Provider do
   use Supervisor
 
   alias PushManager.PublishSystem.Provider.GcmSenderPool
+  alias PushManager.PublishSystem.Provider.ApnsSenderPool
 
   ## Public API
   def start_link(_) do
@@ -11,7 +12,8 @@ defmodule PushManager.PublishSystem.Provider do
   ## Private API
   def init(_) do
     chilren = [
-      worker(GcmSenderPool, [])
+      worker(GcmSenderPool, []),
+      worker(ApnsSenderPool, [])
     ]
 
     supervise(chilren, strategy: :one_for_one)
