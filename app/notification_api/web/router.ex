@@ -22,7 +22,14 @@ defmodule NotificationApi.Router do
   scope "/api", NotificationApi do
     pipe_through :api
 
+    # push
     post "/push", PushController, :send_push
+    get "/push", PushController, :get_push_list
+    get "/push/:id", PushController, :get_push
+
+    # stats
+    get "/stats/:push_id", PushStatsController, :get_stats_summary 
+    get "/stats/:push_id/timeseries", PushStatsController, :get_stats_time_series
   end
 
 end
