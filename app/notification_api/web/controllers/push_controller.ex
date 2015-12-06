@@ -2,9 +2,17 @@ defmodule NotificationApi.PushController do
   use NotificationApi.Web, :controller
   use Timex
 
+  import Ecto.Query
+  
   alias NotificationApi.Push
+  alias NotificationApi.Push.Query, as: PushQuery
+  alias NotificationApi.Service
+
   alias Util.Producer
   alias Util.KeyGenerator
+  alias NotificationApi.Util.QueryUtil.Paginator  
+  
+  @rest_token_name "notification-rest-token"
 
   plug :scrub_params, "push" when action in [:create, :update]
 
@@ -13,14 +21,50 @@ defmodule NotificationApi.PushController do
     render(conn, "index.json", push_option: push_option)
   end
 
+  def get_push_list(conn, params) do
+    service = conn
+    |> get_rest_token
+    |> by_rest_token
+    |> Repo.one
+
+    pagination_push = service.service_id
+    |> PushQuery.by_service_id
+    |> PushQuery.filter(params)
+    |> PushQuery.search(params)
+    |> Paginator.new(params)
+
+    pagination_push = %{pagination_push| data: pagination_push.data |> Enum.map(&(%{&1 | extra: Poison.decode!(&1.extra), push_condition: Poison.decode!(&1.push_condition)}))}
+
+    json conn, pagination_push 
+  end
+
+
+  def get_push(conn, params) do
+    service = conn
+    |> get_rest_token
+    |> by_rest_token
+    |> Repo.one
+
+    push = {service.service_id, params["id"]}
+    |> PushQuery.by_service_id_and_push_id
+    |> Repo.one
+
+    push = %{push | extra: Poison.decode!(push.extra), push_condition: Poison.decode!(push.push_condition)}
+
+    json conn, push
+  end
+
+  defp get_rest_token(conn), do: get_req_header(conn, @rest_token_name)
+
   def send_push(conn, params) do
-    service_id = get_req_header(conn, "notification-rest-token")
-    |> get_service_id
+    service = get_req_header(conn, "notification-rest-token")
+    |> by_rest_token
+    |> Repo.one
 
-    push_id = create_push_id(service_id)
-    options = get_options(service_id)
+    push_id = create_push_id(service.service_id)
+    options = build_options(service)
 
-    params = Dict.merge params, %{"push_id" => push_id, "service_id" =>  service_id, "push_status"=>"APR", "options" => options}
+    params = Dict.merge params, %{"push_id" => push_id, "service_id" =>  service.service_id, "push_status"=>"APR", "options" => options}
 
     params
     |> save_push
@@ -32,15 +76,20 @@ defmodule NotificationApi.PushController do
     json conn, %{pushId: push_id}
   end
 
-  defp get_service_id(token) do
-    "0J.6W4i.0O6i.T"
+  def by_rest_token([token]) do
+    from s in Service,
+    where: s.rest_token == ^token
   end
 
-  defp get_options(service_id) do
+
+  defp build_options(service) do
    %{
-     gcm: %{ api_key: "AIzaSyBblgLAZHvvhM6gk3ZWcl7-mYQiuStsB40" },
-     apns: nil,
-     service_id: service_id,
+     gcm: %{ api_key: service.gcm_api_key },
+     apns: %{
+       cert: service.apns_cert,
+       key: service.apns_key
+     },
+     service_id: service.service_id,
      feedback: %{
        deleted: %{
          method: "POST",
@@ -75,8 +124,8 @@ defmodule NotificationApi.PushController do
 
   defp build_notification_job(params) do
     %{
-      serviceId: Dict.get(params, "service_id"),
-      pushId: Dict.get(params, "push_id"),
+      service_id: Dict.get(params, "service_id"),
+      push_id: Dict.get(params, "push_id"),
       pushTokens: Dict.get(params, "pushTokens"),
       options: Dict.get(params, "options"),
       payload: %{
@@ -88,97 +137,6 @@ defmodule NotificationApi.PushController do
 
   defp publish_push(params) do
     :poolboy.transaction Producer, fn(worker) -> Producer.publish(worker, {Producer.push_queue_name, Poison.encode!(params)}) end
-  end
-
-
-  #   def create(conn, %{"push" => push_params}) do
-  #     changeset = Push.changeset(%Push{}, push_params)
-
-  #     case Repo.insert(changeset) do
-  #       {:ok, push} ->
-  #         conn
-  #         |> put_status(:created)
-  #         |> put_resp_header("location", push_path(conn, :show, push))
-  #         |> render("show.json", push: push)
-  #       {:error, changeset} ->
-  #         conn
-  #         |> put_status(:unprocessable_entity)
-  #         |> render(NotificationApi.ChangesetView, "error.json", changeset: changeset)
-  #     end
-  #   end
-
-  #   def show(conn, %{"id" => id}) do
-  #     push = Repo.get!(Push, id)
-  #     render(conn, "show.json", push: push)
-  #   end
-
-  #   def update(conn, %{"id" => id, "push" => push_params}) do
-  #     push = Repo.get!(Push, id)
-  #     changeset = Push.changeset(push, push_params)
-
-  #     case Repo.update(changeset) do
-  #       {:ok, push} ->
-  #         render(conn, "show.json", push: push)
-  #       {:error, changeset} ->
-  #         conn
-  #         |> put_status(:unprocessable_entity)
-  #         |> render(NotificationApi.ChangesetView, "error.json", changeset: changeset)
-  #     end
-  #   end
-
-  #   def delete(conn, %{"id" => id}) do
-  #     push = Repo.get!(Push, id)
-
-  #     # Here we use delete! (with a bang) because we expect
-  #     # it to always work (and if it does not, it will raise).
-  #     Repo.delete!(push)
-
-  #     send_resp(conn, :no_content, "")
-  #   end
-end
-
-defmodule Util.KeyGenerator do
-  use Timex
-  @base_alpha [
-    "ETczP5tj68NhoMwxpmuZSv0OFgY3VnJi1beIsBHLRKyqlfkWd4aD7UGCArQ9X2",
-    "HFK3h1otaQlRzbwOvnqUxIfJ6yecZGVgLT4k9DSiMPCjANdXmY52Wrs0Ep8B7u",
-    "h15Nlg6KFfuAyH3BtzTq0awnrsLDPdYImSxp7c2RX89oWGeEJQVjbvkUOZ4CMi",
-    "XmTiCxsHUIWD49Ln6ak8G7eObhpgquBREtjMF1ASydo0YQ2fz3PvlV5NJZrKwc",
-    "fnqSdkITMmLC5UQOFhYaNB2GEJoeDWiZxb8Xzrts3VARw06cgK4ypu7jPHl19v",
-    "mnVQ7hAKHUT0iOklD3LJ5Cgb4GtxpZXc6r2Iaw9o8EMBqfyFWjzevSdsRYP1uN",
-    "h15Nlg6KFfuAyH3BtzTq0awnrsLDPdYImSxp7c2RX89oWGeEJQVjbvkUOZ4CMi",
-    "ETczP5tj68NhoMwxpmuZSv0OFgY3VnJi1beIsBHLRKyqlfkWd4aD7UGCArQ9X2",
-    "XmTiCxsHUIWD49Ln6ak8G7eObhpgquBREtjMF1ASydo0YQ2fz3PvlV5NJZrKwc",
-    "HFK3h1otaQlRzbwOvnqUxIfJ6yecZGVgLT4k9DSiMPCjANdXmY52Wrs0Ep8B7u",
-    "XmTiCxsHUIWD49Ln6ak8G7eObhpgquBREtjMF1ASydo0YQ2fz3PvlV5NJZrKwc"
-  ]
-  @base_alpha_length 62
-
-  def gen_timebased_key do
-    Date.universal
-    |> Date.to_timestamp
-    |> Tuple.to_list
-    |> Enum.map_join ".", &(int_to_random_62_string(&1))
-  end
-
-  def int_to_random_62_string(val) do
-    r_int_to_random_62_string(val, @base_alpha, "")
-  end
-
-  defp r_int_to_random_62_string(0, _, key), do: key
-
-  defp r_int_to_random_62_string(val, [h | t], key) do
-    r_int_to_random_62_string(div(val, @base_alpha_length), t, key <> String.at(h, rem(val, @base_alpha_length)))
-  end
-
-
-  def int_to_random_62_string_fixed(val) do
-    r_int_to_random_62_string_fixed(val, @base_alpha, "")
-  end
-
-  defp r_int_to_random_62_string_fixed(_, [], key), do: key
-  defp r_int_to_random_62_string_fixed(val, [h | t], key) do
-    r_int_to_random_62_string_fixed(div(val, @base_alpha_length), t, key <> String.at(h, rem(val, @base_alpha_length)))
   end
 
 end
