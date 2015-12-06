@@ -2,56 +2,50 @@ defmodule NotificationApi.PushStatsController do
   use NotificationApi.Web, :controller
 
   alias NotificationApi.PushStats
+  alias NotificationApi.PushStats.Query, as: PushStatsQuery
+  alias NotificationApi.PushStats.Count, as: PushCount
+
+  alias NotificationApi.Service
+  alias NotificationApi.Service.Query, as: ServiceQuery
+
+  
+  @rest_token_name "notification-rest-token"
 
   plug :scrub_params, "push_stats" when action in [:create, :update]
 
-  def index(conn, _params) do
-    push_stats = Repo.all(PushStats)
-    render(conn, "index.json", push_stats: push_stats)
+  def get_stats_summary(conn, params) do
+   service = get_service(conn) 
+   data = params
+   |> PushStatsQuery.summary_by_push_id
+   |> Repo.all
+    |> Enum.reduce(%PushCount{}, fn([key|[value]], acc) ->
+      case key do
+        "PUB" ->
+          %{acc | published: value |> Decimal.to_string |> Integer.parse |> elem(0) }
+        "OPN" ->
+          %{acc | opened: value |> Decimal.to_string |> Integer.parse |> elem(0) } 
+        "RCV" ->
+          %{acc | received: value |> Decimal.to_string |> Integer.parse |> elem(0) }
+         _ ->
+      end
+    end)
+
+   json conn, data 
   end
 
-  # def create(conn, %{"push_stats" => push_stats_params}) do
-  #   changeset = PushStats.changeset(%PushStats{}, push_stats_params)
+  def get_stats_timseries(conn, params) do
+    service = get_service(conn) 
 
-  #   case Repo.insert(changeset) do
-  #     {:ok, push_stats} ->
-  #       conn
-  #       |> put_status(:created)
-  #       |> put_resp_header("location", push_stats_path(conn, :show, push_stats))
-  #       |> render("show.json", push_stats: push_stats)
-  #     {:error, changeset} ->
-  #       conn
-  #       |> put_status(:unprocessable_entity)
-  #       |> render(NotificationApi.ChangesetView, "error.json", changeset: changeset)
-  #   end
-  # end
+    json conn, %{"test" => "test"}
+  end
 
-  # def show(conn, %{"id" => id}) do
-  #   push_stats = Repo.get!(PushStats, id)
-  #   render(conn, "show.json", push_stats: push_stats)
-  # end
 
-  # def update(conn, %{"id" => id, "push_stats" => push_stats_params}) do
-  #   push_stats = Repo.get!(PushStats, id)
-  #   changeset = PushStats.changeset(push_stats, push_stats_params)
+  defp get_service(conn) do
+    service = conn
+    |> get_rest_token
+    |> ServiceQuery.by_rest_token
+    |> Repo.one
+  end
 
-  #   case Repo.update(changeset) do
-  #     {:ok, push_stats} ->
-  #       render(conn, "show.json", push_stats: push_stats)
-  #     {:error, changeset} ->
-  #       conn
-  #       |> put_status(:unprocessable_entity)
-  #       |> render(NotificationApi.ChangesetView, "error.json", changeset: changeset)
-  #   end
-  # end
-
-  # def delete(conn, %{"id" => id}) do
-  #   push_stats = Repo.get!(PushStats, id)
-
-  #   # Here we use delete! (with a bang) because we expect
-  #   # it to always work (and if it does not, it will raise).
-  #   Repo.delete!(push_stats)
-
-  #   send_resp(conn, :no_content, "")
-  # end
+  defp get_rest_token(conn), do: get_req_header(conn, @rest_token_name)
 end
