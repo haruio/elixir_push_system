@@ -3,11 +3,13 @@ defmodule NotificationApi.PushStats do
 
   schema "push_stats" do
     field :push_id, :string
-
-    timestamps
+    field :stats_start_dt, Ecto.DateTime, default: Ecto.DateTime.utc
+    field :stats_end_dt, Ecto.DateTime, default: Ecto.DateTime.utc
+    field :ststs_cd, :string
+    field :stats_cnt, :integer
   end
 
-  @required_fields ~w(push_id)
+  @required_fields ~w(push_id ststs_cd)
   @optional_fields ~w()
 
   @doc """
@@ -20,4 +22,25 @@ defmodule NotificationApi.PushStats do
     model
     |> cast(params, @required_fields, @optional_fields)
   end
+end
+
+defmodule NotificationApi.PushStats.Query do
+  import Ecto.Query
+  alias NotificationApi.PushStats
+
+  def summary_by_push_id(%{"push_id" => push_id}) do
+    from stats in PushStats,
+    where: stats.push_id == ^push_id,
+    group_by: stats.ststs_cd,
+    select: [stats.ststs_cd, sum(stats.stats_cnt)]
+  end
+
+  def timseries_by_push_id(push_id) do
+    
+  end
+end
+
+
+defmodule NotificationApi.PushStats.Count do
+  defstruct published: 0, received: 0, opened: 0
 end
