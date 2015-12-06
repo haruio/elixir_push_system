@@ -27,4 +27,28 @@ use Mix.Config
 # Configuration from the imported file will override the ones defined
 # here (which is why it is important to import them last).
 #
-#     import_config "#{Mix.env}.exs"
+    import_config "#{Mix.env}.exs"
+
+# config :apns,
+# callback_module:    APNS.Callback,
+# timeout:            30,
+# feedback_interval:  1200,
+# reconnect_after:    1000,
+# support_old_ios:    true,
+# pools: [
+#   app1_dev_pool: [
+#     env: :dev,
+#     pool_size: 10,
+#     pool_max_overflow: 5,
+#     certfile: "keys/cert.pem",
+#     keyfile: "keys/key.pem"
+#   ]
+# ]
+
+# config :push_manager, PushManager.Repo,
+# adapter: Ecto.Adapters.MySQL,
+# username: "makeusmobile",
+# password: "foretouch919293",
+# database: "mks_common",
+# hostname: "127.0.0.1",
+# pool_size: 10
