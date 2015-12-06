@@ -14,7 +14,7 @@ defmodule PushManager.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :gcm, :httpoison],
+    [applications: [:logger, :gcm, :httpoison, :ecto, :mariaex, :apns],
      mod: {PushManager, []}]
   end
 
@@ -34,7 +34,10 @@ defmodule PushManager.Mixfile do
       {:httpoison, "~> 0.8.0"},
       {:exactor, "~> 2.2"},
       {:amqp, "~> 0.1.3"},
-      {:gcm, "~> 1.1"}
+      {:gcm, "~> 1.1"},
+      {:apns, "== 0.0.10"},
+      {:ecto, "~> 1.0"},
+      {:mariaex, "~> 0.4.2"} 
     ]
   end
 end
