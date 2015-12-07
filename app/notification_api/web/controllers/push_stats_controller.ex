@@ -33,10 +33,13 @@ defmodule NotificationApi.PushStatsController do
    json conn, data 
   end
 
-  def get_stats_timseries(conn, params) do
+  def get_stats_timeseries(conn, params) do
     service = get_service(conn) 
 
-    json conn, %{"test" => "test"}
+    data = params
+    |> PushStatsQuery.timeseries_by_push_id
+
+    json conn, data
   end
 
 

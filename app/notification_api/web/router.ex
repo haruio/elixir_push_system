@@ -29,7 +29,7 @@ defmodule NotificationApi.Router do
 
     # stats
     get "/stats/:push_id", PushStatsController, :get_stats_summary 
-    get "/stats/:push_id/timeseries", PushStatsController, :get_stats_time_series
+    get "/stats/:push_id/timeseries", PushStatsController, :get_stats_timeseries
   end
 
 end

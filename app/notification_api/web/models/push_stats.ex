@@ -27,16 +27,27 @@ end
 defmodule NotificationApi.PushStats.Query do
   import Ecto.Query
   alias NotificationApi.PushStats
+  alias Util.Parser
+  alias Timex.DateFormat
 
-  def summary_by_push_id(%{"push_id" => push_id}) do
+  def summary_by_push_id(%{"push_id" => push_id}), do: summary_by_push_id(push_id)
+  def summary_by_push_id(push_id) do
     from stats in PushStats,
     where: stats.push_id == ^push_id,
     group_by: stats.ststs_cd,
     select: [stats.ststs_cd, sum(stats.stats_cnt)]
   end
 
-  def timseries_by_push_id(push_id) do
-    
+  def timeseries_by_push_id(%{"push_id" => push_id}), do: timeseries_by_push_id(push_id)
+  def timeseries_by_push_id(push_id) do
+    Ecto.Adapters.SQL.query(NotificationApi.Repo, "SELECT DATE_FORMAT(stats_end_dt, \"%Y-%m-%dT%H:00:00.00Z\") as stats_end_dt, ststs_cd, SUM(stats_cnt) as stats_cnt FROM `push_stats` WHERE push_id = ?  GROUP BY DATE_FORMAT(stats_end_dt, \"%Y-%m-%d %H\"), ststs_cd ORDER BY stats_end_dt DESC",[push_id])
+    |> timeseries_to_json
+  end
+
+  defp timeseries_to_json({:ok, %{rows: rows}}) do
+    rows
+    |> Enum.map(fn([dt, cd, cnt]) -> %{"stats_dt" => dt |> Parser.iso_to_long , "stats_cd" => cd, "stats_cnt" => cnt |> Parser.decimal_to_integer } end)
+    |> Enum.group_by(fn(%{"stats_cd" => cd}) -> cd  end)
   end
 end
 
