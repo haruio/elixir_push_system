@@ -10,6 +10,7 @@ defmodule NotificationApi.PushController do
 
   alias Util.Producer
   alias Util.KeyGenerator
+  alias Util.Parser
   alias NotificationApi.Util.QueryUtil.Paginator  
   
   @rest_token_name "notification-rest-token"
@@ -33,7 +34,7 @@ defmodule NotificationApi.PushController do
     |> PushQuery.search(params)
     |> Paginator.new(params)
 
-    pagination_push = %{pagination_push| data: pagination_push.data |> Enum.map(&(%{&1 | extra: Poison.decode!(&1.extra), push_condition: Poison.decode!(&1.push_condition)}))}
+    pagination_push = %{pagination_push| data: pagination_push.data |> Enum.map(&(build_to_json(&1)))}
 
     json conn, pagination_push 
   end
@@ -49,9 +50,22 @@ defmodule NotificationApi.PushController do
     |> PushQuery.by_service_id_and_push_id
     |> Repo.one
 
-    push = %{push | extra: Poison.decode!(push.extra), push_condition: Poison.decode!(push.push_condition)}
+    json conn, push |> build_to_json
+  end
 
-    json conn, push
+  def build_to_json(push) do
+
+    IO.inspect push.update_dt |> Ecto.DateTime.to_iso8601
+
+    %{push |
+      extra: Poison.decode!(push.extra),
+      push_condition: Poison.decode!(push.push_condition),
+      update_dt: Parser.ecto_to_long(push.update_dt),
+      create_dt: Parser.ecto_to_long(push.create_dt),
+      publish_start_dt: Parser.ecto_to_long(push.publish_start_dt),
+      publish_end_dt: Parser.ecto_to_long(push.publish_end_dt),
+      publish_dt: Parser.ecto_to_long(push.publish_dt),
+     }
   end
 
   defp get_rest_token(conn), do: get_req_header(conn, @rest_token_name)

@@ -2,6 +2,8 @@ defmodule NotificationApi.Push do
   use NotificationApi.Web, :model
   use Timex
 
+  alias Util.Parser
+
   @primary_key {:push_id, :string, []}
   @derive {Phoenix.Param, key: :push_id}
   # @derive {Poison.Encoder, only: [:service_id, :push_id, :push_condition, :push_status, :publish_dt, :publish_start_dt,
@@ -23,7 +25,7 @@ defmodule NotificationApi.Push do
     field :update_dt, Ecto.DateTime, default: Ecto.DateTime.utc
   end
 
-  @required_fields ~w(push_id body title push_condition extra service_id push_status)
+  @required_fields ~w(push_id body title push_condition extra service_id push_status publish_dt)
   @optional_fields ~w(create_user update_user)
 
   @doc """
@@ -46,7 +48,8 @@ defmodule NotificationApi.Push do
       title: Dict.get(params, "message") |> Dict.get("title"),
       push_condition: Poison.encode!(Dict.get(params, "condition")),
       extra: Poison.encode!(Dict.get(params, "extra")),
-      push_status: Dict.get(params, "push_status"),
+      push_status: Dict.get(params, "push_status"), 
+      publish_dt: Dict.get(params, "publishTime") |> Parser.long_to_ecto_date_time,
       create_user: 0, # TODO user_seq 
       update_user: 0  # TODO user_seq
     }
